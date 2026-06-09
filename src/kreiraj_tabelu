@@ -1,0 +1,75 @@
+# -*- coding: utf-8 -*-
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+
+import psycopg2
+
+conn = psycopg2.connect(
+    host="localhost",
+    database="solarni_paneli",
+    user="postgres",
+    password=""
+)
+
+cur = conn.cursor()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS vlasnik (
+    vlasnik_id SERIAL PRIMARY KEY,
+    ime VARCHAR(50),
+    prezime VARCHAR(50),
+    email VARCHAR(100),
+    telefon VARCHAR(20),
+    adresa VARCHAR(150)
+);
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS objekat (
+    objekat_id SERIAL PRIMARY KEY,
+    vlasnik_id INT REFERENCES vlasnik(vlasnik_id),
+    naziv VARCHAR(100),
+    tip VARCHAR(50),
+    adresa VARCHAR(150),
+    godina_izgradnje INT
+);
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS solarni_panel (
+    panel_id SERIAL PRIMARY KEY,
+    objekat_id INT REFERENCES objekat(objekat_id),
+    model VARCHAR(100),
+    snaga_kw DECIMAL(6,2),
+    datum_instalacije DATE,
+    status VARCHAR(30)
+);
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS ocitavanje (
+    ocitavanje_id SERIAL PRIMARY KEY,
+    panel_id INT REFERENCES solarni_panel(panel_id),
+    datum DATE,
+    proizvedena_energija_kwh DECIMAL(8,2),
+    temperatura_c DECIMAL(5,2),
+    suncanost_sati DECIMAL(4,1)
+);
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS odrzavanje (
+    odrzavanje_id SERIAL PRIMARY KEY,
+    panel_id INT REFERENCES solarni_panel(panel_id),
+    datum DATE,
+    tip_servisa VARCHAR(100),
+    troskovi DECIMAL(8,2),
+    napomena TEXT
+);
+""")
+
+conn.commit()
+print("Tabele uspjesno kreirane!")
+
+cur.close()
+conn.close()
